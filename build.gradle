@@ -4,6 +4,11 @@ plugins {
 
 group pGroup
 
+version '1.0'
+
+sourceCompatibility = 16
+
+
 sourceSets.main {
     java.srcDir("src/")
     resources.srcDir("assets/")
@@ -14,12 +19,22 @@ repositories {
     maven { url "https://jitpack.io" }
 }
 
-dependencies {
-    implementation "com.github.Anuken.Mindustry:core:$pMindustryVersion"
-}
-
 jar {
     archiveFileName.set pArtifactFilename
+
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}
+
+
+dependencies {
+    implementation  'com.github.younggam:multi-lib:java-v1.1.0'
+
+    compileOnly "com.github.Anuken.Arc:arc-core:$pMindustryVersion"
+    compileOnly "com.github.Anuken.Mindustry:core:$pMindustryVersion"
 }
 
 task dexify(type: Jar) {
@@ -30,41 +45,12 @@ task dexify(type: Jar) {
     doFirst {
         exec {
             workingDir dexedArtifact.parent
-
-            // Get Android SDK paths and validate
-            String androidSdk = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
-            if (!(androidSdk && new File(androidSdk).exists())) {
-                throw new GradleException("Set ANDROID_HOME or ANDROID_SDK_ROOT environment variables to a valid Android SDK.")
-            }
-
-            File platforms = new File(androidSdk, "platforms/")
-            if (!(platforms.exists() && platforms.isDirectory())) {
-                throw new GradleException("Could not find directory '${platforms.getAbsolutePath()}'." +
-                        " Ensure an Android SDK is installed.")
-            }
-
-            File androidJar = new File(project.hasProperty("pAndroidSdkVersion") ?
-                    new File(platforms, project.property("pAndroidSdkVersion") as String) :
-                    platforms.listFiles().reverse().find
-                            { it.isDirectory() && new File(it, "android.jar").exists() },
-                    "android.jar")
-            if (!(androidJar && androidJar.exists())) {
-                throw new GradleException("Could not find 'android.jar' in '${platforms.getAbsolutePath()}'." +
-                        " If there is, specify valid 'pAndroidSdkVersion' in 'gradle.properties'")
-            }
-
-
-            // Assemble d8 invocation
-            List<File> files = configurations.compileClasspath.asList() + configurations.runtimeClasspath.asList() + [androidJar]
-            List<String> command = ["d8", "--min-api", pMinApi,
-                                    *files.collect { ["--classpath", it.path] }.flatten(),
-                                    "--output", dexedArtifact, jarArtifact]
-
-            // Awaken d8
+            def command = ["d8", "--min-api", pMinApi, "--output", dexedArtifact, jarArtifact]
             if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows'))
                 commandLine("cmd", "/c", *command)
             else
                 commandLine(*command)
+
         }
     }
 
@@ -72,3 +58,4 @@ task dexify(type: Jar) {
 }
 
 task buildDex dependsOn "build", "dexify"
+targetCompatibility = JavaVersion.VERSION_16

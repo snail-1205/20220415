@@ -1,11 +1,11 @@
 package content;
 
-import mindustry.ctype.ContentList;
+import mindustry.ctype.*;
 
 
 public class ModLoader implements ContentList{
     private final ContentList[] contents = {
-            new SNblocks();
+             new SNblocks()
     };
 
     public void load(){

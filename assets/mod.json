@@ -4,9 +4,8 @@
   "author": "[#8738ff[]]snail1205[[]]",
   "description": "snailmod example",
   "version": "0",
-  "main": "sonnicon.modtemplate.ModTemplate",
-  "minGameVersion": "125",
-  "dependencies": [],
-  "hidden": false,
-  "java": true
+  "main": "core.Main",
+  "minGameVersion": 135,
+  "java": true,
+  "repo": "snail1205/20220415"
 }
